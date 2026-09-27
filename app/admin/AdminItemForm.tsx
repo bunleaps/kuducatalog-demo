@@ -9,6 +9,7 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { createClient } from "../../lib/supabase/client";
 import { storageBucket } from "../../lib/supabase/config";
+import AdminTabs from "./AdminTabs";
 
 type Item = { id?: string; title: string; category: string; description: string; availability: string; media: string[]; featured_media: string | null; is_published: boolean };
 const blankItem: Item = { title: "", category: "Camera", description: "", availability: "available", is_published: true, media: [], featured_media: null };
@@ -46,6 +47,7 @@ export default function AdminItemForm({ initialItem }: { initialItem?: Item }) {
 
   return <main className="min-h-screen bg-slate-50 text-slate-950">
     <header className="border-b border-slate-200 bg-white"><div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6"><Link href="/admin" className="flex items-center gap-2 text-sm font-semibold"><span className="grid size-7 place-items-center rounded-md bg-slate-900 text-xs text-white">R</span>RENT4SET <span className="font-normal text-slate-400">/ Admin</span></Link><Button asChild variant="ghost" size="sm"><Link href="/admin"><ArrowLeft size={15} />Back to catalog</Link></Button></div></header>
+    <AdminTabs active="catalog" />
     <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10"><div className="mb-7"><p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">{editing ? "Edit item" : "New item"}</p><h1 className="text-3xl font-semibold tracking-tight">{editing ? "Edit item" : "Add an item"}</h1><p className="mt-2 text-sm text-slate-500">Add the details, availability, and media for this equipment.</p></div>
       <form className="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6" onSubmit={save}>
         <div className="grid gap-4 sm:grid-cols-[1.5fr_1fr_1fr]"><label className={labelClass}><span className="flex items-center gap-1.5"><Type size={14} className="text-slate-400" />Title</span><Input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Sony FX3" /></label><label className={labelClass}><span className="flex items-center gap-1.5"><Tag size={14} className="text-slate-400" />Category</span><Input required value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Camera, Lens, Lighting…" /></label><label className={labelClass}><span className="flex items-center gap-1.5"><Folder size={14} className="text-slate-400" />Availability</span><select className={selectClass} value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })}><option value="available">Available</option><option value="limited">Limited availability</option><option value="unavailable">Currently unavailable</option></select></label></div>

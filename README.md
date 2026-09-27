@@ -10,7 +10,13 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
 NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=catalog-media
 ```
 
-In Supabase SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql). Then create the first admin under Authentication → Users. Admin access currently means any authenticated Supabase user.
+In Supabase SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql). Then create the first admin under Authentication → Users.
+
+### Customer accounts and project sets
+
+Before enabling public registration, run [`supabase/migrations/20260927_add_customer_accounts_and_sets.sql`](./supabase/migrations/20260927_add_customer_accounts_and_sets.sql) in Supabase SQL Editor.
+
+It preserves existing Auth users as admins, gives all newly registered users the customer role, and creates the secure project-set tables and policies.
 
 Run `npm run dev` to start the app.
 

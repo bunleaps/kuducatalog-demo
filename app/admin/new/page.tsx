@@ -1,5 +1,7 @@
 import AdminItemForm from "../AdminItemForm";
+import { requireAdmin } from "../../../lib/auth";
 
-export default function NewAdminItemPage() {
+export default async function NewAdminItemPage() {
+  await requireAdmin();
   return <AdminItemForm />;
 }

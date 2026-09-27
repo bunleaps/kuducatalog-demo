@@ -6,6 +6,7 @@ import { Boxes, CircleOff, ExternalLink, LogOut, PackageCheck, Pencil, Plus, Tra
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { createClient } from "../../lib/supabase/client";
+import AdminTabs from "./AdminTabs";
 
 type Item = { id: string; title: string; category: string; availability: string; media: string[]; featured_media: string | null; is_published: boolean };
 const availabilityClasses: Record<string, string> = { available: "border-green-200 bg-green-50 text-green-700", limited: "border-amber-200 bg-amber-50 text-amber-700", unavailable: "border-red-200 bg-red-50 text-red-700" };
@@ -21,6 +22,7 @@ export default function AdminDashboard({ initialItems, userEmail }: { initialIte
 
   return <main className="min-h-screen bg-slate-50 text-slate-950">
     <header className="border-b border-slate-200 bg-white"><div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6"><Link href="/" className="flex items-center gap-2 text-sm font-semibold"><span className="grid size-7 place-items-center rounded-md bg-slate-900 text-xs text-white">R</span>RENT4SET <span className="font-normal text-slate-400">/ Admin</span></Link><div className="flex items-center gap-2"><span className="hidden text-xs text-slate-500 sm:block">{userEmail}</span><Button variant="ghost" size="sm" onClick={signOut}><LogOut size={14} />Sign out</Button></div></div></header>
+    <AdminTabs active="catalog" />
     <section className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Overview</p><h1 className="text-3xl font-semibold tracking-tight">Catalog</h1><p className="mt-2 text-sm text-slate-500">Manage the equipment available in your RENT4SET catalog.</p></div><Button asChild><Link href="/admin/new"><Plus size={16} />Add item</Link></Button></div>
       <div className="mb-9 grid gap-3 sm:grid-cols-3"><StatCard icon={<Boxes size={16} />} label="Total items" value={initialItems.length} /><StatCard icon={<PackageCheck size={16} />} label="Published" value={published} /><StatCard icon={<CircleOff size={16} />} label="Unavailable" value={unavailable} /></div>

@@ -1,21 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Boxes, CircleDot, RotateCcw, Search, Tag } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { BookmarkPlus, Boxes, CircleDot, RotateCcw, Search, Tag } from "lucide-react";
 import type { CatalogItem } from "../../lib/catalog";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import { createClient } from "../../lib/supabase/client";
 
 const availabilityLabels = { available: "Available", limited: "Limited availability", unavailable: "Currently unavailable" };
 const availabilityClasses = { available: "border-green-200 bg-green-50 text-green-700", limited: "border-amber-200 bg-amber-50 text-amber-700", unavailable: "border-red-200 bg-red-50 text-red-700" };
 const selectClass = "h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:ring-2 focus:ring-slate-400";
 
-export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
+type ProjectSet = { id: string; title: string };
+
+export default function CatalogBrowser({ items, userId }: { items: CatalogItem[]; userId?: string }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [availability, setAvailability] = useState("all");
+  const [sets, setSets] = useState<ProjectSet[]>([]);
+  const [selectedSetId, setSelectedSetId] = useState("");
+  const [savingItemId, setSavingItemId] = useState<string | null>(null);
+  const [savedItemId, setSavedItemId] = useState<string | null>(null);
   const categories = Array.from(new Set(items.map((item) => item.category))).filter(Boolean);
   const filteredItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -24,6 +32,26 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       return matchesQuery && (category === "all" || item.category === category) && (availability === "all" || item.availability === availability);
     });
   }, [availability, category, items, query]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    supabase.from("project_sets").select("id,title").order("created_at", { ascending: false }).then(({ data }) => {
+      const projectSets = (data ?? []) as ProjectSet[];
+      setSets(projectSets);
+      setSelectedSetId(projectSets[0]?.id ?? "");
+    });
+  }, [userId]);
+
+  async function saveToSet(catalogItemId: string) {
+    const supabase = createClient();
+    if (!supabase || !selectedSetId) return;
+    setSavingItemId(catalogItemId); setSavedItemId(null);
+    const { error } = await supabase.from("project_set_items").upsert({ project_set_id: selectedSetId, catalog_item_id: catalogItemId, quantity: 1 }, { onConflict: "project_set_id,catalog_item_id" });
+    if (!error) setSavedItemId(catalogItemId);
+    setSavingItemId(null);
+  }
 
   return (
     <>
@@ -45,6 +73,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
             <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">{item.category}</p>
             <h2 className="mb-3 text-base font-semibold tracking-tight text-slate-950">{item.title}</h2>
             <Badge variant="secondary" className={availabilityClasses[item.availability]}>{availabilityLabels[item.availability]}</Badge>
+            {item.availability === "available" && <div className="mt-4">{!userId ? <Button asChild variant="outline" size="sm"><Link href="/register"><BookmarkPlus size={14} />Save to set</Link></Button> : !sets.length ? <Button asChild variant="outline" size="sm"><Link href="/account"><BookmarkPlus size={14} />Create a set</Link></Button> : <div className="flex gap-2"><select aria-label="Choose a project set" className="h-9 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:ring-2 focus:ring-slate-400" value={selectedSetId} onChange={(event) => setSelectedSetId(event.target.value)}>{sets.map((set) => <option key={set.id} value={set.id}>{set.title}</option>)}</select><Button size="sm" onClick={() => saveToSet(item.id)} disabled={savingItemId === item.id}>{savedItemId === item.id ? "Saved" : <><BookmarkPlus size={14} />Save</>}</Button></div>}</div>}
           </CardContent>
         </Card>
       ))}</section> : <div className="rounded-lg border border-dashed border-slate-300 bg-white px-5 py-16 text-center"><Boxes className="mx-auto mb-3 text-slate-400" size={22} /><h2 className="text-sm font-semibold text-slate-950">No items match those filters.</h2><p className="mt-1 text-sm text-slate-500">Try a broader search or clear the filters.</p></div>}
