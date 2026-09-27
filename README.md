@@ -1,4 +1,18 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Kit Catalog
+
+### Local setup
+
+Create `.env.local` in this folder:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
+NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=catalog-media
+```
+
+In Supabase SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql). Then create the first admin under Authentication → Users. Admin access currently means any authenticated Supabase user.
+
+Run `npm run dev` to start the app.
 
 ## Getting Started
 
