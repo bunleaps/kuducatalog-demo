@@ -20,5 +20,5 @@ export default function RemoveSetItemButton({ setItemId, itemTitle }: { setItemI
     setRemoving(false);
   }
 
-  return <Button variant="ghost" size="sm" className="h-8 shrink-0 px-2 text-xs text-red-700 hover:bg-red-50 hover:text-red-700" onClick={remove} disabled={removing}><Trash2 size={13} />{removing ? "Removing…" : "Remove"}</Button>;
+  return <Button variant="ghost" size="sm" className="h-8 shrink-0 px-2 text-xs text-red-700 hover:bg-red-50 hover:text-red-700 dark:text-red-300 dark:hover:bg-red-950/50 dark:hover:text-red-200" onClick={remove} disabled={removing}><Trash2 size={13} />{removing ? "Removing…" : "Remove"}</Button>;
 }
