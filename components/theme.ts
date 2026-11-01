@@ -5,7 +5,7 @@ export const THEME_CHANGE_EVENT = "rent4set-theme-change";
 
 export function getStoredTheme(): ThemePreference {
   const theme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return theme === "light" || theme === "dark" || theme === "system" ? theme : "system";
+  return theme === "light" || theme === "dark" || theme === "system" ? theme : "dark";
 }
 
 export function applyTheme(theme: ThemePreference) {

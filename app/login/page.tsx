@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { ArrowLeft, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { createClient } from "../../lib/supabase/client";
-import ThemeToggle from "../../components/ThemeToggle";
+import AuthShell from "../../components/AuthShell";
 
 export default function CustomerLoginPage() {
   const router = useRouter();
@@ -23,5 +23,5 @@ export default function CustomerLoginPage() {
     if (signInError) { setError(signInError.message); setLoading(false); return; }
     router.push("/account"); router.refresh();
   }
-  return <main className="grid min-h-screen place-items-center bg-slate-50 p-4 text-slate-950 dark:bg-slate-950 dark:text-slate-50"><div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="mb-10 flex items-center justify-between"><Link href="/" className="flex items-center gap-2 text-sm font-semibold"><span className="grid size-7 place-items-center rounded-md bg-slate-900 text-xs text-white dark:bg-slate-100 dark:text-slate-950">R</span>RENT4SET</Link><ThemeToggle /></div><p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Your account</p><h1 className="text-2xl font-semibold tracking-tight">Sign in</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Continue managing your project sets.</p><form className="mt-7 grid gap-4" onSubmit={login}><label className="grid gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">Email<Input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><label className="grid gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">Password<Input type="password" required value={password} onChange={(event) => setPassword(event.target.value)} /></label>{error && <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</p>}<Button disabled={loading}><LogIn size={15} />{loading ? "Signing in…" : "Sign in"}</Button></form><div className="mt-6 flex items-center justify-between text-sm"><Link href="/register" className="text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">Create an account</Link><Link href="/" className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"><ArrowLeft size={15} />Catalog</Link></div></div></main>;
+  return <AuthShell eyebrow="Client access" title="Welcome back" description="Sign in to continue building your equipment request."><form className="mt-8 grid gap-5" onSubmit={login}><label className="grid gap-2 text-xs font-bold uppercase">Email address<Input className="dark:border-slate-300 dark:bg-white dark:text-slate-950 dark:placeholder:text-slate-400" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@production.com" /></label><label className="grid gap-2 text-xs font-bold uppercase">Password<Input className="dark:border-slate-300 dark:bg-white dark:text-slate-950" type="password" required value={password} onChange={(event) => setPassword(event.target.value)} /></label>{error && <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}<Button className="w-full" size="lg" disabled={loading}><LogIn size={15} />{loading ? "Signing in…" : "Sign in"}</Button></form><div className="my-7 flex items-center gap-4 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-300" />OR<span className="h-px flex-1 bg-slate-300" /></div><Button asChild variant="outline" className="w-full dark:border-slate-400 dark:text-slate-950 dark:hover:bg-slate-100"><Link href="/register">Create client account</Link></Button><p className="mt-8 text-center text-sm text-slate-500">Need equipment first? <Link href="/catalog" className="font-medium text-[#f54449]">Browse the catalog</Link></p></AuthShell>;
 }

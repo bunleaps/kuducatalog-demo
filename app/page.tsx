@@ -1,26 +1,41 @@
 import Link from "next/link";
-import { Heart, LayoutDashboard, LogIn, Settings } from "lucide-react";
-import CatalogBrowser from "./components/CatalogBrowser";
-import ThemeToggle from "../components/ThemeToggle";
+import { ArrowRight, CheckCircle2, MapPin, PackageCheck, UsersRound } from "lucide-react";
+import RentalFooter from "../components/RentalFooter";
+import RentalHeader from "../components/RentalHeader";
+import { Button } from "../components/ui/button";
 import { getPublicCatalog } from "../lib/catalog";
-import { isSupabaseConfigured } from "../lib/supabase/config";
-import { createClient } from "../lib/supabase/server";
+import { getViewer } from "../lib/viewer";
+
+const capabilities = [
+  { number: "01", title: "Camera and lenses", body: "Cinema bodies, lens sets, monitoring and production media." },
+  { number: "02", title: "Lighting and grip", body: "Fixtures, modifiers, stands and location-ready support." },
+  { number: "03", title: "Transport and power", body: "Plan pickup, delivery requirements and demanding locations." },
+  { number: "04", title: "Production support", body: "Build a clear request for equipment, logistics and crew needs." },
+];
 
 export default async function Home() {
-  const { items, setupError } = await getPublicCatalog();
-  const supabase = await createClient();
-  const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
-  const { data: profile } = supabase && user ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle() : { data: null };
-  const isAdmin = profile?.role === "admin";
-  return (
-    <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
-      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"><div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6"><Link href="/" className="flex items-center gap-2 text-sm font-semibold"><span className="grid size-7 place-items-center rounded-md bg-slate-900 text-xs text-white dark:bg-slate-100 dark:text-slate-950">R</span>RENT4SET</Link><nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400"><ThemeToggle />{isAdmin ? <><Link href="/admin" className="flex items-center gap-1.5 transition hover:text-slate-950 dark:hover:text-white"><LayoutDashboard size={15} /><span className="hidden sm:inline">Admin</span></Link><Link href="/admin/settings" className="flex items-center gap-1.5 transition hover:text-slate-950 dark:hover:text-white" aria-label="Settings"><Settings size={15} /><span className="hidden md:inline">Settings</span></Link></> : user ? <><Link href="/account" className="flex items-center gap-1.5 transition hover:text-slate-950 dark:hover:text-white"><Heart size={15} /><span className="hidden sm:inline">My sets</span></Link><Link href="/account/settings" className="flex items-center gap-1.5 transition hover:text-slate-950 dark:hover:text-white" aria-label="Settings"><Settings size={15} /><span className="hidden md:inline">Settings</span></Link></> : <Link href="/login" className="flex items-center gap-1.5 transition hover:text-slate-950 dark:hover:text-white"><LogIn size={15} />Sign in</Link>}</nav></div></header>
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        {!isSupabaseConfigured && <div className="mb-5 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Connect Supabase to load your catalog. Add the environment variables listed in the project README.</div>}
-        {setupError && <div className="mb-5 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Supabase is connected, but the catalog table is not set up yet. Run <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-900 dark:bg-slate-800 dark:text-slate-100">supabase/schema.sql</code> in your Supabase SQL Editor, then refresh.</div>}
-        <CatalogBrowser items={items} userId={!isAdmin ? user?.id : undefined} showSetTools={!isAdmin} />
-      </section>
-      <footer className="mx-auto flex w-full max-w-6xl justify-between border-t border-slate-200 px-4 py-6 text-xs text-slate-500 sm:px-6 dark:border-slate-800 dark:text-slate-400"><span>RENT4SET</span><span>Camera and production equipment.</span></footer>
-    </main>
-  );
+  const [{ items }, viewer] = await Promise.all([getPublicCatalog(), getViewer()]);
+  const featured = items.slice(0, 4);
+  const categories = Array.from(new Set(items.map((item) => item.category.trim()))).filter(Boolean).slice(0, 8);
+
+  return <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-[#101011] dark:text-white">
+    <RentalHeader role={viewer.role} quoteCount={viewer.quoteCount} />
+    <section className="mx-auto max-w-7xl px-4 pb-14 pt-12 sm:px-6 sm:pt-16">
+      <p className="text-xs font-bold uppercase text-[#f54449]">Cambodia film equipment rental</p>
+      <h1 className="mt-4 max-w-3xl text-5xl font-black leading-[0.98] tracking-tight sm:text-7xl">Find the gear.<br />Build the set.</h1>
+      <p className="mt-6 max-w-2xl text-lg leading-7 text-slate-600 dark:text-[#aaaab1]">Cameras, lenses, lighting, grip and production support—organized into one clear, quote-ready request.</p>
+      <form action="/catalog" className="mt-9 grid overflow-hidden rounded-sm bg-white sm:grid-cols-[1fr_220px_170px]">
+        <input name="q" className="h-16 min-w-0 px-6 text-sm text-slate-950 outline-none placeholder:text-slate-500" placeholder="Search cameras, lenses, lighting or support…" />
+        <select name="category" className="h-16 border-y border-slate-200 bg-white px-5 text-xs font-bold uppercase text-slate-900 outline-none sm:border-x sm:border-y-0"><option value="all">All categories</option>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select>
+        <button className="h-16 bg-[#f54449] text-sm font-bold uppercase text-white hover:bg-[#ff565b]">Search</button>
+      </form>
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-[#8e8e95]"><span className="mr-1 uppercase">Popular:</span>{categories.slice(0, 4).map((category) => <Link key={category} href={`/catalog?category=${encodeURIComponent(category)}`} className="rounded-full bg-slate-200 px-4 py-2 text-slate-700 hover:bg-slate-300 dark:bg-[#242427] dark:text-[#d0d0d5] dark:hover:bg-[#303034]">{category}</Link>)}</div>
+      <div className="mt-12 flex items-end justify-between"><h2 className="text-2xl font-bold">Ready for your next shoot</h2><Link href="/catalog" className="hidden items-center gap-2 text-xs font-bold uppercase hover:text-[#f54449] sm:flex">View all gear <ArrowRight size={14} /></Link></div>
+      {featured.length ? <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{featured.map((item) => { const image = item.featured_media || item.media?.[0]; return <Link key={item.id} href={`/catalog?q=${encodeURIComponent(item.title)}`} className="group border border-slate-200 bg-white p-3 transition hover:border-[#f54449] dark:border-[#343438] dark:bg-[#1a1a1d]"><div className="aspect-[4/3] overflow-hidden bg-[#f5f5f5]">{image ? <img src={image} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]" /> : <span className="grid h-full place-items-center text-sm text-slate-400">No image</span>}</div><p className="mt-4 text-[11px] font-bold uppercase text-[#f54449]">{item.category}</p><h3 className="mt-1 line-clamp-2 font-bold">{item.title}</h3><p className="mt-2 text-xs text-slate-500 dark:text-[#96969d]">Request rate · {item.availability === "available" ? "Available" : "Check availability"}</p></Link>; })}</div> : <div className="mt-5 border border-dashed border-slate-300 px-6 py-14 text-center text-sm text-slate-500 dark:border-[#3a3a3e] dark:text-[#929299]">Published equipment will appear here.</div>}
+      <div className="mt-10 grid bg-[#f4f3ef] text-slate-950 sm:grid-cols-2 lg:grid-cols-4"><div className="p-6"><p className="text-[11px] font-bold uppercase text-[#f54449]">Built around the shoot</p><h3 className="mt-4 text-lg font-bold">Phnom Penh pickup</h3><p className="mt-2 text-xs text-slate-500">Plan dates and handover details in one request.</p></div><div className="p-6"><MapPin size={18} /><h3 className="mt-4 text-lg font-bold">Location planning</h3><p className="mt-2 text-xs text-slate-500">Share the shoot location and logistics requirements.</p></div><div className="p-6"><UsersRound size={18} /><h3 className="mt-4 text-lg font-bold">Production context</h3><p className="mt-2 text-xs text-slate-500">Include crew, delivery and special production notes.</p></div><div className="p-6"><PackageCheck size={18} /><h3 className="mt-4 text-lg font-bold">One complete request</h3><p className="mt-2 text-xs text-slate-500">Dates, equipment and project details stay together.</p></div></div>
+    </section>
+    <section id="how-it-works" className="bg-slate-100 dark:bg-[#1a1a1d]"><div className="mx-auto max-w-7xl px-4 py-16 sm:px-6"><p className="text-xs font-bold uppercase text-[#f54449]">A faster rental workflow</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">From equipment list to quote-ready set.</h2><p className="mt-3 text-slate-600 dark:text-[#a5a5ac]">Build one request and give KUDU the context needed to coordinate availability and logistics.</p><div className="mt-10 grid gap-8 md:grid-cols-3">{["Choose equipment", "Share the production plan", "Copy the quote request"].map((title, index) => <div key={title} className="flex gap-4"><span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#f54449] font-bold text-white">{index + 1}</span><div><h3 className="font-bold">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-500 dark:text-[#96969d]">{index === 0 ? "Browse by category and add the gear your shoot needs." : index === 1 ? "Add dates, location and any special production requirements." : "Review one complete message and send it through your preferred channel."}</p></div></div>)}</div></div></section>
+    <section id="support" className="mx-auto max-w-7xl px-4 py-16 sm:px-6"><div className="flex items-end justify-between gap-6"><div><p className="text-xs font-bold uppercase text-[#f54449]">Equipment and support</p><h2 className="mt-4 text-3xl font-black sm:text-4xl">Everything the production needs.</h2></div><Link href="/catalog" className="hidden text-xs font-bold uppercase hover:text-[#f54449] sm:block">Explore catalog →</Link></div><div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{capabilities.map((item) => <div key={item.number} className="border border-slate-200 bg-white p-6 dark:border-[#343438] dark:bg-[#1a1a1d]"><p className="text-xs font-bold text-[#f54449]">{item.number}</p><h3 className="mt-6 text-xl font-bold">{item.title}</h3><p className="mt-3 text-sm leading-6 text-slate-500 dark:text-[#9999a0]">{item.body}</p></div>)}</div><div className="mt-12 grid gap-6 bg-slate-100 p-7 text-slate-950 dark:bg-[#f4f3ef] md:grid-cols-[1fr_auto] md:items-center"><div><p className="text-xs font-bold uppercase text-[#f54449]">Build around the production</p><h2 className="mt-3 text-2xl font-black sm:text-3xl">Start with the equipment. Add the context.</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Create a saved quote list, share it with collaborators and prepare a complete rental request when the shoot is ready.</p></div><Button asChild size="lg"><Link href={viewer.role === "customer" ? "/account" : "/register"}><CheckCircle2 size={17} />Start a quote</Link></Button></div></section>
+    <RentalFooter />
+  </main>;
 }

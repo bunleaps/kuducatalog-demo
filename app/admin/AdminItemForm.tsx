@@ -9,13 +9,14 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { createClient } from "../../lib/supabase/client";
 import { storageBucket } from "../../lib/supabase/config";
+import AdminHeader from "../../components/AdminHeader";
+import RentalFooter from "../../components/RentalFooter";
 import AdminTabs from "./AdminTabs";
-import ThemeToggle from "../../components/ThemeToggle";
 
 type Item = { id?: string; title: string; category: string; category_id?: string | null; description: string; availability: string; media: string[]; featured_media: string | null; is_published: boolean };
 type CategoryOption = { id: string; name: string };
 const blankItem: Item = { title: "", category: "", category_id: "", description: "", availability: "available", is_published: true, media: [], featured_media: null };
-const selectClass = "h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 dark:focus:ring-slate-600";
+const selectClass = "h-11 w-full border border-slate-300 bg-white px-4 text-sm text-slate-950 outline-none transition focus:ring-2 focus:ring-[#f54449] dark:border-[#414146] dark:bg-[#111113] dark:text-white";
 const labelClass = "grid gap-2 text-sm font-medium text-slate-700 dark:text-slate-300";
 
 export default function AdminItemForm({ initialItem, categories }: { initialItem?: Item; categories: CategoryOption[] }) {
@@ -62,11 +63,11 @@ export default function AdminItemForm({ initialItem, categories }: { initialItem
     router.push("/admin"); router.refresh();
   }
 
-  return <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
-    <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"><div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6"><Link href="/admin" className="flex items-center gap-2 text-sm font-semibold"><span className="grid size-7 place-items-center rounded-md bg-slate-900 text-xs text-white dark:bg-slate-100 dark:text-slate-950">R</span>RENT4SET <span className="font-normal text-slate-400 dark:text-slate-500">/ Admin</span></Link><div className="flex items-center gap-1"><ThemeToggle /><Button asChild variant="ghost" size="sm"><Link href="/admin"><ArrowLeft size={15} />Back to catalog</Link></Button></div></div></header>
+  return <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-[#101011] dark:text-white">
+    <AdminHeader />
     <AdminTabs active="catalog" />
-    <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10"><div className="mb-7"><p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{editing ? "Edit item" : "New item"}</p><h1 className="text-3xl font-semibold tracking-tight">{editing ? "Edit item" : "Add an item"}</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Add the details, availability, and media for this equipment.</p></div>
-      <form className="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900" onSubmit={save}>
+    <section className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14"><Link href="/admin" className="inline-flex items-center gap-2 text-xs font-bold uppercase text-slate-500 hover:text-slate-950 dark:text-[#8f8f96] dark:hover:text-white"><ArrowLeft size={14} />Back to catalog</Link><div className="mb-8 mt-7 border-b border-slate-200 pb-7 dark:border-[#303034]"><p className="text-xs font-bold uppercase text-[#f54449]">{editing ? "Update equipment" : "Catalog entry"}</p><h1 className="mt-3 text-4xl font-black">{editing ? "Edit equipment" : "Add equipment"}</h1><p className="mt-2 text-sm text-slate-500 dark:text-[#929299]">Add the details, availability and media customers need to build a quote.</p></div>
+      <form className="grid gap-6 border border-slate-200 bg-white p-5 sm:p-7 dark:border-[#343438] dark:bg-[#1a1a1d]" onSubmit={save}>
         <div className="grid gap-4 sm:grid-cols-[1.5fr_1fr_1fr]"><label className={labelClass}><span className="flex items-center gap-1.5"><Type size={14} className="text-slate-400 dark:text-slate-500" />Title</span><Input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Sony FX3" /></label><label className={labelClass}><span className="flex items-center gap-1.5"><Tag size={14} className="text-slate-400 dark:text-slate-500" />Category</span><select required disabled={!categories.length} className={selectClass} value={form.category_id ?? ""} onChange={(e) => { const category = categories.find((option) => option.id === e.target.value); setForm({ ...form, category_id: category?.id ?? "", category: category?.name ?? "" }); }}>{!categories.length && <option value="">Create a category first</option>}{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select><Link href="/admin/categories" className="text-xs font-normal text-slate-500 underline-offset-4 hover:text-slate-950 hover:underline dark:text-slate-400 dark:hover:text-white">Manage categories</Link></label><label className={labelClass}><span className="flex items-center gap-1.5"><Folder size={14} className="text-slate-400 dark:text-slate-500" />Availability</span><select className={selectClass} value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })}><option value="available">Available</option><option value="limited">Limited availability</option><option value="unavailable">Currently unavailable</option></select></label></div>
         <label className={labelClass}><span className="flex items-center gap-1.5"><FileText size={14} className="text-slate-400 dark:text-slate-500" />Description <span className="font-normal text-slate-400 dark:text-slate-500">Markdown supported</span></span><Textarea required rows={10} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={"Add specs, notes, or kit details…\n\n**Example:** Includes two batteries and a cage."} /></label>
         <label className={labelClass}><span className="flex items-center gap-1.5"><ImagePlus size={14} className="text-slate-400 dark:text-slate-500" />Media <span className="font-normal text-slate-400 dark:text-slate-500">Images are public</span></span><Input type="file" accept="image/*" multiple onChange={(e) => upload(e.target.files)} /></label>
@@ -75,6 +76,6 @@ export default function AdminItemForm({ initialItem, categories }: { initialItem
         {message && <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{message}</p>}
         <div className="flex gap-2"><Button disabled={saving || !form.category_id}>{saving ? "Saving…" : editing ? "Update item" : "Add item"}</Button><Button type="button" variant="outline" onClick={() => router.push("/admin")}>Cancel</Button></div>
       </form>
-    </section>
+    </section><RentalFooter />
   </main>;
 }

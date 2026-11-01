@@ -3,8 +3,8 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
-const buttonVariants = cva("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-600 disabled:pointer-events-none disabled:opacity-50", {
-  variants: { variant: { default: "bg-slate-900 text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white", outline: "border border-slate-200 bg-white text-slate-950 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800", ghost: "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white", destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600" }, size: { default: "h-10 px-4 py-2", sm: "h-9 rounded-md px-3", lg: "h-11 rounded-md px-8" } },
+const buttonVariants = cva("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm text-sm font-bold uppercase tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f54449] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#101010] disabled:pointer-events-none disabled:opacity-50", {
+  variants: { variant: { default: "bg-[#f54449] text-white shadow-sm hover:bg-[#ff565b]", outline: "border border-slate-300 bg-transparent text-slate-950 hover:bg-slate-100 dark:border-[#3a3a3d] dark:text-white dark:hover:bg-[#242427]", ghost: "text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-[#a7a7ad] dark:hover:bg-[#242427] dark:hover:text-white", destructive: "bg-red-600 text-white hover:bg-red-500" }, size: { default: "h-11 px-5 py-2", sm: "h-9 px-3", lg: "h-13 px-8" } },
   defaultVariants: { variant: "default", size: "default" },
 });
 
