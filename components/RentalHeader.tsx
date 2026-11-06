@@ -1,11 +1,5 @@
-import Link from "next/link";
-import { LayoutDashboard, LogIn, Settings } from "lucide-react";
-import RentalBrand from "./RentalBrand";
-import ThemeToggle from "./ThemeToggle";
+import HomeHeader from "./HomeHeader";
 
-export default function RentalHeader({ role, quoteCount = 0, compact = false }: { role?: "admin" | "customer"; quoteCount?: number; compact?: boolean }) {
-  return <>
-    {!compact && <div className="border-b border-slate-200 bg-slate-100 text-slate-500 dark:border-[#262629] dark:bg-[#19191b] dark:text-[#a7a7ad]"><div className="mx-auto flex h-8 max-w-7xl items-center justify-between px-4 text-[11px] sm:px-6"><span>Cambodia-based equipment rental and production support</span><span className="hidden sm:inline">Build a production-ready quote list</span></div></div>}
-    <header className="border-b border-slate-200 bg-white text-slate-950 dark:border-[#2a2a2d] dark:bg-[#101011] dark:text-white"><div className="mx-auto flex h-17 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6"><RentalBrand /><nav className="hidden items-center gap-8 text-xs font-bold uppercase md:flex"><Link href="/catalog" className="hover:text-[#f54449]">Catalog</Link><Link href="/#how-it-works" className="hover:text-[#f54449]">How it works</Link><Link href="/#support" className="hover:text-[#f54449]">Support</Link></nav><div className="flex items-center gap-2"><ThemeToggle />{role === "admin" ? <Link href="/admin" className="inline-flex h-10 items-center gap-2 rounded-sm bg-[#f54449] px-4 text-xs font-bold uppercase text-white hover:bg-[#ff565b]"><LayoutDashboard size={15} />Admin</Link> : role === "customer" ? <><Link href="/account" className="inline-flex h-10 items-center rounded-sm bg-[#f54449] px-4 text-xs font-bold uppercase text-white hover:bg-[#ff565b]">My quotes{quoteCount ? ` · ${String(quoteCount).padStart(2, "0")}` : ""}</Link><Link href="/account/settings" className="hidden p-2 text-slate-500 hover:text-slate-950 dark:text-[#a7a7ad] dark:hover:text-white sm:inline-flex" aria-label="Settings"><Settings size={17} /></Link></> : <Link href="/login" className="inline-flex h-10 items-center gap-2 rounded-sm bg-[#f54449] px-4 text-xs font-bold uppercase text-white hover:bg-[#ff565b]"><LogIn size={15} />Sign in</Link>}</div></div></header>
-  </>;
+export default function RentalHeader({ role, quoteCount = 0, favoriteCount = 0 }: { role?: "admin" | "customer"; quoteCount?: number; favoriteCount?: number; compact?: boolean }) {
+  return <HomeHeader role={role} quoteCount={quoteCount} favoriteCount={favoriteCount} />;
 }
