@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Heart, LogIn, MessageCircle, ShoppingCart, UserRound } from "lucide-react";
 import RentalBrand from "./RentalBrand";
+import ThemeToggle from "./ThemeToggle";
 
 export default function HomeHeader({ role, quoteCount = 0, favoriteCount = 0 }: { role?: "admin" | "customer"; quoteCount?: number; favoriteCount?: number }) {
   const cartHref = role === "customer" ? "/account" : role === "admin" ? "/admin" : "/login";
   const favoriteHref = role === "customer" ? "/account/favorites" : role === "admin" ? "/admin" : "/login";
-  const accountHref = role === "customer" ? "/account" : role === "admin" ? "/admin" : "/login";
+  const accountHref = role === "customer" ? "/account/settings" : role === "admin" ? "/admin/settings" : "/login";
   const accountLabel = role === "customer" ? "Account" : role === "admin" ? "Admin" : "Login";
 
   return <header className="relative z-40 border-b border-white/10 bg-[#0d0d0e] text-white">
@@ -20,6 +21,7 @@ export default function HomeHeader({ role, quoteCount = 0, favoriteCount = 0 }: 
           <Heart size={19} />
           {favoriteCount > 0 && <span className="absolute right-0 top-0 grid min-w-4 rounded-full bg-[#f54449] px-1 text-center text-[9px] font-bold leading-4 text-white">{favoriteCount > 9 ? "9+" : favoriteCount}</span>}
         </Link>
+        <ThemeToggle className="text-white/75 hover:bg-white/10 hover:text-white dark:text-white/75 dark:hover:bg-white/10 dark:hover:text-white" />
         <Link href={accountHref} className="hidden h-10 items-center gap-2 border border-white/25 px-4 text-xs font-bold uppercase transition hover:border-white hover:bg-white hover:text-slate-950 sm:inline-flex">
           {role ? <UserRound size={15} /> : <LogIn size={15} />}{accountLabel}
         </Link>

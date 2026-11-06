@@ -9,7 +9,7 @@ function resolvedDark(theme: ThemePreference) {
   return theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 }
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ className = "" }: { className?: string }) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -21,5 +21,5 @@ export default function ThemeToggle() {
     return () => { media.removeEventListener("change", sync); window.removeEventListener(THEME_CHANGE_EVENT, sync); };
   }, []);
 
-  return <Button type="button" variant="ghost" size="sm" className="size-9 px-0" onClick={() => saveTheme(isDark ? "light" : "dark")} aria-label={isDark ? "Use light mode" : "Use dark mode"} title={isDark ? "Use light mode" : "Use dark mode"}>{isDark ? <Sun size={16} /> : <Moon size={16} />}</Button>;
+  return <Button type="button" variant="ghost" size="sm" className={`size-9 px-0 ${className}`} onClick={() => saveTheme(isDark ? "light" : "dark")} aria-label={isDark ? "Use light mode" : "Use dark mode"} title={isDark ? "Use light mode" : "Use dark mode"}>{isDark ? <Sun size={16} /> : <Moon size={16} />}</Button>;
 }

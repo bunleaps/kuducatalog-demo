@@ -13,7 +13,7 @@ type Item = { id: string; title: string; category: string; availability: string;
 const availabilityClasses: Record<string, string> = { available: "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300", limited: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300", unavailable: "border-red-300 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300" };
 const availabilityLabels: Record<string, string> = { available: "Available", limited: "Limited", unavailable: "Unavailable" };
 
-export default function AdminDashboard({ initialItems, userEmail }: { initialItems: Item[]; userEmail: string }) {
+export default function AdminDashboard({ initialItems }: { initialItems: Item[] }) {
   const router = useRouter();
   const supabase = createClient();
   const published = initialItems.filter((item) => item.is_published).length;
@@ -21,7 +21,7 @@ export default function AdminDashboard({ initialItems, userEmail }: { initialIte
   async function remove(id: string) { if (!supabase || !confirm("Delete this catalog item?")) return; const { error } = await supabase.from("catalog_items").delete().eq("id", id); if (!error) router.refresh(); }
 
   return <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-[#101011] dark:text-white">
-    <AdminHeader email={userEmail} />
+    <AdminHeader />
     <AdminTabs active="catalog" />
     <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="flex flex-col gap-5 border-b border-slate-200 pb-8 dark:border-[#303034] sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase text-[#f54449]">Inventory management</p><h1 className="mt-3 text-4xl font-black">Equipment catalog</h1><p className="mt-2 text-sm text-slate-500 dark:text-[#929299]">Publish, update and organize the equipment available to customers.</p></div><Button asChild size="lg"><Link href="/admin/new"><Plus size={16} />Add equipment</Link></Button></div>

@@ -1,7 +1,24 @@
 import Link from "next/link";
-import RentalBrand from "./RentalBrand";
 import { contactLinks } from "../lib/contact";
+import RentalBrand from "./RentalBrand";
 
 export default function RentalFooter() {
-  return <footer id="contact" className="border-t border-slate-200 bg-slate-100 text-slate-500 dark:border-[#29292c] dark:bg-[#0c0c0d] dark:text-[#9a9aa1]"><div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr_1fr]"><div><RentalBrand /><p className="mt-4 max-w-sm text-sm leading-6">Professional camera and production equipment organized into one quote-ready workflow.</p></div><div><p className="text-xs font-bold uppercase text-slate-950 dark:text-white">Rental</p><div className="mt-4 grid gap-2 text-sm"><Link href="/catalog" className="hover:text-slate-950 dark:hover:text-white">Equipment catalog</Link><Link href="/account" className="hover:text-slate-950 dark:hover:text-white">My quote lists</Link><Link href="/#how-it-works" className="hover:text-slate-950 dark:hover:text-white">Rental process</Link></div></div><div><p className="text-xs font-bold uppercase text-slate-950 dark:text-white">Support</p><div className="mt-4 grid gap-2 text-sm"><span>Phnom Penh, Cambodia</span><span>Production planning</span><span>Equipment and logistics</span></div></div><div><p className="text-xs font-bold uppercase text-slate-950 dark:text-white">Contact</p><div className="mt-4 grid gap-2 text-sm">{contactLinks.phone && <a href={`tel:${contactLinks.phone}`} className="hover:text-slate-950 dark:hover:text-white">{contactLinks.phone}</a>}{contactLinks.email && <a href={`mailto:${contactLinks.email}`} className="break-all hover:text-slate-950 dark:hover:text-white">{contactLinks.email}</a>}{!contactLinks.phone && !contactLinks.email && <span>Configure contact details in the environment settings.</span>}</div></div></div></footer>;
+  const socials = [
+    { label: "WhatsApp", href: contactLinks.whatsapp },
+    { label: "Telegram", href: contactLinks.telegram },
+    { label: "Facebook", href: contactLinks.facebook },
+  ];
+
+  return <footer id="contact" className="border-t border-slate-200 bg-slate-100 text-slate-500 dark:border-[#29292c] dark:bg-[#0c0c0d] dark:text-[#9a9aa1]">
+    <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr_1fr]">
+      <div><RentalBrand /><p className="mt-4 max-w-sm text-sm leading-6">Professional camera and production equipment organized into one quote-ready workflow.</p></div>
+      <div><p className="text-xs font-bold uppercase text-slate-950 dark:text-white">Rental</p><div className="mt-4 grid gap-2 text-sm"><Link href="/catalog" className="hover:text-slate-950 dark:hover:text-white">Equipment catalog</Link><Link href="/account" className="hover:text-slate-950 dark:hover:text-white">My quote lists</Link><Link href="/#how-it-works" className="hover:text-slate-950 dark:hover:text-white">Rental process</Link></div></div>
+      <div><p className="text-xs font-bold uppercase text-slate-950 dark:text-white">Support</p><div className="mt-4 grid gap-2 text-sm"><span>Phnom Penh, Cambodia</span><span>Production planning</span><span>Equipment and logistics</span></div></div>
+      <div><p className="text-xs font-bold uppercase text-slate-950 dark:text-white">Contact</p><div className="mt-4 grid gap-2 text-sm">
+        {contactLinks.phone && <a href={`tel:${contactLinks.phone}`} className="hover:text-slate-950 dark:hover:text-white">{contactLinks.phone}</a>}
+        {contactLinks.email && <a href={`mailto:${contactLinks.email}`} className="break-all hover:text-slate-950 dark:hover:text-white">{contactLinks.email}</a>}
+        {socials.map((social) => social.href ? <a key={social.label} href={social.href} target="_blank" rel="noreferrer" className="hover:text-slate-950 dark:hover:text-white">{social.label}</a> : <span key={social.label}>{social.label}</span>)}
+      </div></div>
+    </div>
+  </footer>;
 }

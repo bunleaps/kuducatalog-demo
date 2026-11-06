@@ -9,7 +9,7 @@ import { Input } from "./ui/input";
 import ThemeSettings from "./ThemeSettings";
 import { createClient } from "../lib/supabase/client";
 
-export default function AccountSettings({ email, role, backHref }: { email: string; role: "admin" | "customer"; backHref: string }) {
+export default function AccountSettings({ email, displayName = "", role, backHref }: { email: string; displayName?: string; role: "admin" | "customer"; backHref: string }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -35,7 +35,7 @@ export default function AccountSettings({ email, role, backHref }: { email: stri
   return <div className="grid gap-5 lg:grid-cols-2">
     <section className={panel}>
       <div className="mb-7 flex items-start gap-4"><span className="grid size-10 shrink-0 place-items-center bg-[#27272b] text-[#f54449]"><UserRound size={18} /></span><div><p className="text-xs font-bold uppercase text-[#f54449]">Identity</p><h2 className="mt-1 text-lg font-black">Account details</h2><p className="mt-1 text-sm text-[#929299]">Your sign-in and access information.</p></div></div>
-      <dl className="grid gap-5 text-sm"><div className="border-t border-slate-200 pt-4 dark:border-[#343438]"><dt className="text-[11px] font-bold uppercase text-slate-500 dark:text-[#77777f]">Email address</dt><dd className="mt-2 break-all font-bold text-slate-950 dark:text-white">{email}</dd></div><div className="border-t border-slate-200 pt-4 dark:border-[#343438]"><dt className="text-[11px] font-bold uppercase text-slate-500 dark:text-[#77777f]">Access level</dt><dd className="mt-2 flex items-center gap-2 font-bold capitalize text-slate-950 dark:text-white"><ShieldCheck size={15} className="text-[#f54449]" />{role}</dd></div></dl>
+      <dl className="grid gap-5 text-sm"><div className="border-t border-slate-200 pt-4 dark:border-[#343438]"><dt className="text-[11px] font-bold uppercase text-slate-500 dark:text-[#77777f]">Name</dt><dd className="mt-2 font-bold text-slate-950 dark:text-white">{displayName || "Not provided"}</dd></div><div className="border-t border-slate-200 pt-4 dark:border-[#343438]"><dt className="text-[11px] font-bold uppercase text-slate-500 dark:text-[#77777f]">Email address</dt><dd className="mt-2 break-all font-bold text-slate-950 dark:text-white">{email}</dd></div><div className="border-t border-slate-200 pt-4 dark:border-[#343438]"><dt className="text-[11px] font-bold uppercase text-slate-500 dark:text-[#77777f]">Access level</dt><dd className="mt-2 flex items-center gap-2 font-bold capitalize text-slate-950 dark:text-white"><ShieldCheck size={15} className="text-[#f54449]" />{role}</dd></div></dl>
     </section>
 
     <section className={panel}>
