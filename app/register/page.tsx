@@ -21,7 +21,7 @@ export default function RegisterPage() {
     event.preventDefault(); setLoading(true); setError(""); setMessage("");
     const supabase = createClient();
     if (!supabase) { setError("Supabase is not configured yet."); setLoading(false); return; }
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + "/account", data: { display_name: name.trim() } } });
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + "/auth/callback?next=/account", data: { display_name: name.trim() } } });
     if (signUpError) { setError(signUpError.message); setLoading(false); return; }
     if (data.session) { router.push("/account"); router.refresh(); return; }
     setMessage("Check your email to confirm your account, then sign in."); setLoading(false);

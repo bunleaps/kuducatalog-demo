@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, MapPin, PackageCheck, Search, UsersRound } from "lucide-react";
+import { CheckCircle2, MapPin, PackageCheck, Search, UsersRound } from "lucide-react";
 import ContactRail from "../components/ContactRail";
 import HomeHeader from "../components/HomeHeader";
-import HomeEquipmentCard from "./components/HomeEquipmentCard";
+import FeaturedEquipmentScroller from "./components/FeaturedEquipmentScroller";
 import RentalFooter from "../components/RentalFooter";
 import { Button } from "../components/ui/button";
+import { Select } from "../components/ui/select";
 import { getPublicCatalog } from "../lib/catalog";
 import { getViewer } from "../lib/viewer";
 
@@ -17,10 +18,10 @@ const capabilities = [
 
 export default async function Home() {
   const [{ items }, viewer] = await Promise.all([getPublicCatalog(), getViewer()]);
-  const featured = items.slice(0, 4);
+  const featuredItems = items.filter((item) => item.is_featured);
+  const showcaseCount = Math.max(8, featuredItems.length);
+  const featured = [...featuredItems, ...items.filter((item) => !item.is_featured)].slice(0, showcaseCount);
   const categories = Array.from(new Set(items.map((item) => item.category.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b));
-  const heroImage = items.find((item) => item.featured_media || item.media?.[0]);
-  const heroImageUrl = heroImage?.featured_media || heroImage?.media?.[0];
 
   return <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-[#101011] dark:text-white">
     <HomeHeader role={viewer.role} quoteCount={viewer.quoteCount} favoriteCount={viewer.favoriteCount} />
@@ -28,7 +29,7 @@ export default async function Home() {
 
     <section
       className="relative isolate min-h-[540px] overflow-hidden bg-[#171719] bg-cover bg-center sm:min-h-[620px]"
-      style={heroImageUrl ? { backgroundImage: `url("${heroImageUrl}")` } : undefined}
+      style={{ backgroundImage: 'url("/images/hero-camera.jpg")', backgroundPosition: "58% center" }}
     >
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(8,8,9,.94)_0%,rgba(8,8,9,.78)_43%,rgba(8,8,9,.4)_72%,rgba(8,8,9,.58)_100%)]" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-black/70 to-transparent" />
@@ -36,45 +37,29 @@ export default async function Home() {
         <div className="max-w-3xl text-white">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#ff555a]">Cambodia film equipment rental</p>
           <h1 className="mt-5 text-5xl font-black leading-[.95] tracking-[-0.04em] drop-shadow-lg sm:text-7xl lg:text-8xl">Find the gear.<br />Build the set.</h1>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">Search cameras, lenses, lighting, grip and production equipment for your next shoot.</p>
+          <p className="mt-6 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">Film &amp; Event Production Equipment Rental</p>
         </div>
 
-        <form action="/catalog" className="mt-10 grid max-w-5xl overflow-hidden bg-white shadow-2xl sm:grid-cols-[1fr_210px_150px]">
+        <form action="/catalog" className="relative z-20 mt-10 grid max-w-5xl bg-white shadow-2xl sm:grid-cols-[1fr_210px_150px]">
           <label className="flex h-16 items-center gap-3 px-6">
             <Search size={18} className="shrink-0 text-slate-400" />
             <input name="q" className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none placeholder:text-slate-500" placeholder="Search cameras, lenses, lighting or support…" />
           </label>
-          <select name="category" className="h-16 border-y border-slate-200 bg-white px-5 text-xs font-bold uppercase text-slate-900 outline-none sm:border-x sm:border-y-0">
-            <option value="all">All categories</option>
-            {categories.map((category) => <option key={category} value={category}>{category}</option>)}
-          </select>
+          <Select name="category" ariaLabel="Equipment category" defaultValue="all" options={[{ value: "all", label: "All categories" }, ...categories.map((category) => ({ value: category, label: category }))]} className="border-y border-slate-200 sm:border-x sm:border-y-0" triggerClassName="h-16 border-0 px-5 text-xs font-bold uppercase text-slate-900 focus-visible:ring-inset dark:bg-white dark:text-slate-900" menuClassName="mt-0 border-t-0 text-xs uppercase" />
           <button className="h-16 bg-[#f54449] text-sm font-bold uppercase text-white transition hover:bg-[#ff5a5f]">Search</button>
         </form>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-white/65">
-          <span className="mr-1 font-bold uppercase">Popular:</span>
-          {categories.slice(0, 4).map((category) => <Link key={category} href={`/catalog?category=${encodeURIComponent(category)}`} className="rounded-full border border-white/25 bg-black/25 px-4 py-2 text-white backdrop-blur-sm transition hover:border-[#f54449] hover:bg-[#f54449]">{category}</Link>)}
+        <div className="mt-5 flex items-start gap-3 text-xs text-white/65">
+          <span className="shrink-0 pt-2 font-bold uppercase">All Equipment:</span>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => <Link key={category} href={`/catalog?category=${encodeURIComponent(category)}`} className="rounded-full border border-white/25 bg-black/25 px-4 py-2 text-white backdrop-blur-sm transition hover:border-[#f54449] hover:bg-[#f54449]">{category}</Link>)}
+          </div>
         </div>
       </div>
     </section>
 
-    <nav aria-label="Equipment categories" className="border-y border-[#303034] bg-[#171719] text-white">
-      <div className="w-full overflow-x-auto">
-        <div className="mx-auto flex min-w-max w-fit items-stretch">
-          <Link href="/catalog" className="shrink-0 border-x border-[#303034] bg-[#f54449] px-5 py-5 text-[11px] font-bold uppercase tracking-wide text-white">All equipment</Link>
-          {categories.map((category) => <Link key={category} href={`/catalog?category=${encodeURIComponent(category)}`} className="shrink-0 border-r border-[#303034] px-5 py-5 text-[11px] font-bold uppercase tracking-wide text-white/75 transition hover:bg-[#242427] hover:text-white">{category}</Link>)}
-        </div>
-      </div>
-    </nav>
-
     <section className="mx-auto max-w-7xl px-4 pb-14 pt-12 sm:px-6">
-      <div className="flex items-end justify-between">
-        <div><p className="text-xs font-bold uppercase text-[#f54449]">Equipment catalog</p><h2 className="mt-2 text-2xl font-black sm:text-3xl">Ready for your next shoot</h2></div>
-        <Link href="/catalog" className="hidden items-center gap-2 text-xs font-bold uppercase hover:text-[#f54449] sm:flex">View all gear <ArrowRight size={14} /></Link>
-      </div>
-      {featured.length ? <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {featured.map((item) => <HomeEquipmentCard key={item.id} item={item} userId={viewer.role === "customer" ? viewer.user?.id : undefined} allowQuote={viewer.role !== "admin"} />)}
-      </div> : <div className="mt-6 border border-dashed border-slate-300 px-6 py-14 text-center text-sm text-slate-500 dark:border-[#3a3a3e] dark:text-[#929299]">Published equipment will appear here.</div>}
+      <FeaturedEquipmentScroller items={featured} userId={viewer.role === "customer" ? viewer.user?.id : undefined} allowQuote={viewer.role !== "admin"} />
 
       <div className="mt-10 grid bg-[#f4f3ef] text-slate-950 sm:grid-cols-2 lg:grid-cols-4">
         <div className="p-6"><p className="text-[11px] font-bold uppercase text-[#f54449]">Built around the shoot</p><h3 className="mt-4 text-lg font-bold">Phnom Penh pickup</h3><p className="mt-2 text-xs text-slate-500">Plan dates and handover details in one request.</p></div>

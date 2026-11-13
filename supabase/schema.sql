@@ -6,11 +6,13 @@ create table if not exists public.catalog_items (
   availability text not null default 'available' check (availability in ('available', 'limited', 'unavailable')),
   media text[] not null default '{}',
   featured_media text,
+  is_featured boolean not null default false,
   is_published boolean not null default true,
   created_at timestamptz not null default now()
 );
 
 alter table public.catalog_items add column if not exists featured_media text;
+alter table public.catalog_items add column if not exists is_featured boolean not null default false;
 update public.catalog_items
 set featured_media = media[1]
 where featured_media is null and cardinality(media) > 0;

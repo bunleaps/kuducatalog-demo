@@ -9,6 +9,18 @@ import { Button } from "../../components/ui/button";
 
 type ProjectSet = { id: string; title: string };
 
+const availabilityClasses: Record<CatalogItem["availability"], string> = {
+  available: "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+  limited: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+  unavailable: "border-red-300 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300",
+};
+
+const availabilityLabels: Record<CatalogItem["availability"], string> = {
+  available: "Available",
+  limited: "Limited availability",
+  unavailable: "Unavailable",
+};
+
 export default function HomeEquipmentCard({ item, userId, allowQuote = true }: { item: CatalogItem; userId?: string; allowQuote?: boolean }) {
   const image = item.featured_media || item.media?.[0];
   const [open, setOpen] = useState(false);
@@ -37,7 +49,7 @@ export default function HomeEquipmentCard({ item, userId, allowQuote = true }: {
   }
 
   return <>
-    <article className="group border border-slate-200 bg-white p-3 transition hover:border-[#f54449] dark:border-[#343438] dark:bg-[#1a1a1d]">
+    <article className="group flex h-full flex-col border border-slate-200 bg-white p-3 transition hover:border-[#f54449] dark:border-[#343438] dark:bg-[#1a1a1d]">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#f5f5f5]">
         {image ? <img src={image} alt={item.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" /> : <span className="grid h-full place-items-center text-sm text-slate-400">No image</span>}
         <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/55 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
@@ -47,7 +59,11 @@ export default function HomeEquipmentCard({ item, userId, allowQuote = true }: {
       </div>
       <p className="mt-4 text-[11px] font-bold uppercase text-[#f54449]">{item.category}</p>
       <Link href={`/catalog/${item.id}`} className="mt-1 block line-clamp-2 font-bold hover:text-[#f54449]">{item.title}</Link>
-      <p className="mt-2 text-xs text-slate-500 dark:text-[#96969d]">{item.availability === "available" ? "Available" : "Check availability"}</p>
+      <div className="mt-auto pt-3">
+        <span className={`inline-flex w-fit border px-2.5 py-1 text-[11px] font-bold uppercase ${availabilityClasses[item.availability]}`}>
+          {availabilityLabels[item.availability]}
+        </span>
+      </div>
     </article>
 
     {open && <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center sm:p-4" role="dialog" aria-modal="true" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>

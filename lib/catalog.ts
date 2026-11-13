@@ -8,6 +8,7 @@ export type CatalogItem = {
   availability: "available" | "limited" | "unavailable";
   media: string[];
   featured_media: string | null;
+  is_featured: boolean;
   created_at: string;
 };
 
