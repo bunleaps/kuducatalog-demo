@@ -9,6 +9,8 @@ export type CatalogItem = {
   media: string[];
   featured_media: string | null;
   is_featured: boolean;
+  daily_rate: number | null;
+  short_specs: string[];
   created_at: string;
 };
 

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Heart, LogIn, MessageCircle, ShoppingCart, UserRound } from "lucide-react";
+import { Heart, LogIn, MessageCircle, UserRound } from "lucide-react";
+import CartNavLink from "./CartNavLink";
 import RentalBrand from "./RentalBrand";
 import ThemeToggle from "./ThemeToggle";
 
 export default function HomeHeader({ role, quoteCount = 0, favoriteCount = 0 }: { role?: "admin" | "customer"; quoteCount?: number; favoriteCount?: number }) {
-  const cartHref = role === "customer" ? "/account" : role === "admin" ? "/admin" : "/login";
   const favoriteHref = role === "customer" ? "/account/favorites" : role === "admin" ? "/admin" : "/login";
   const accountHref = role === "customer" ? "/account/settings" : role === "admin" ? "/admin/settings" : "/login";
   const accountLabel = role === "customer" ? "Account" : role === "admin" ? "Admin" : "Login";
@@ -13,10 +13,7 @@ export default function HomeHeader({ role, quoteCount = 0, favoriteCount = 0 }: 
     <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-5 px-4 py-3 sm:px-6">
       <RentalBrand inverted />
       <nav className="flex items-center gap-1 sm:gap-2" aria-label="Customer navigation">
-        <Link href={cartHref} className="relative grid size-10 place-items-center text-white/75 transition hover:bg-white/10 hover:text-white" aria-label={`Quote cart with ${quoteCount} lists`}>
-          <ShoppingCart size={19} />
-          {quoteCount > 0 && <span className="absolute right-0 top-0 grid min-w-4 rounded-full bg-[#f54449] px-1 text-center text-[9px] font-bold leading-4 text-white">{quoteCount > 9 ? "9+" : quoteCount}</span>}
-        </Link>
+        <CartNavLink role={role} initialCount={quoteCount} />
         <Link href={favoriteHref} className="relative grid size-10 place-items-center text-white/75 transition hover:bg-white/10 hover:text-white" aria-label={`Favorites with ${favoriteCount} items`}>
           <Heart size={19} />
           {favoriteCount > 0 && <span className="absolute right-0 top-0 grid min-w-4 rounded-full bg-[#f54449] px-1 text-center text-[9px] font-bold leading-4 text-white">{favoriteCount > 9 ? "9+" : favoriteCount}</span>}

@@ -2,14 +2,18 @@
 
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { addItemToCart, getGuestCartIds, loadActiveCart } from "../../lib/cart-client";
 import type { CatalogItem } from "../../lib/catalog";
+import { createClient } from "../../lib/supabase/client";
 import HomeEquipmentCard from "./HomeEquipmentCard";
 
 export default function FeaturedEquipmentScroller({ items, userId, allowQuote }: { items: CatalogItem[]; userId?: string; allowQuote: boolean }) {
   const scroller = useRef<HTMLDivElement>(null);
   const isPaused = useRef(false);
   const resumeAt = useRef(0);
+  const [cartItemIds, setCartItemIds] = useState<Set<string>>(new Set());
+  const [addingItemId, setAddingItemId] = useState<string | null>(null);
 
   function pauseTemporarily(duration = 6000) {
     resumeAt.current = Date.now() + duration;
@@ -44,6 +48,29 @@ export default function FeaturedEquipmentScroller({ items, userId, allowQuote }:
     return () => window.clearInterval(interval);
   }, [items.length]);
 
+  useEffect(() => {
+    if (!userId) {
+      queueMicrotask(() => setCartItemIds(new Set(getGuestCartIds())));
+      return;
+    }
+    const supabase = createClient();
+    if (!supabase) return;
+    loadActiveCart(supabase).then((cart) => setCartItemIds(cart.itemIds)).catch(() => undefined);
+  }, [userId]);
+
+  async function add(itemId: string) {
+    if (cartItemIds.has(itemId)) return;
+    setAddingItemId(itemId);
+    try {
+      await addItemToCart(itemId, userId);
+      setCartItemIds((current) => new Set(current).add(itemId));
+    } catch {
+      return;
+    } finally {
+      setAddingItemId(null);
+    }
+  }
+
   return <div>
     <div className="flex items-end justify-between gap-4">
       <div>
@@ -68,7 +95,7 @@ export default function FeaturedEquipmentScroller({ items, userId, allowQuote }:
       aria-label="Featured equipment"
     >
       <div className="flex gap-4">
-        {items.map((item) => <div key={item.id} className="w-[82vw] shrink-0 snap-start sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-3rem)/4)]"><HomeEquipmentCard item={item} userId={userId} allowQuote={allowQuote} /></div>)}
+        {items.map((item) => <div key={item.id} className="w-[82vw] shrink-0 snap-start sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-3rem)/4)]"><HomeEquipmentCard item={item} allowQuote={allowQuote} inCart={cartItemIds.has(item.id)} adding={addingItemId === item.id} onAdd={() => add(item.id)} /></div>)}
       </div>
     </div> : <div className="mt-5 border border-dashed border-slate-300 px-6 py-14 text-center text-sm text-slate-500 dark:border-[#3a3a3e] dark:text-[#929299]">Published equipment will appear here.</div>}
   </div>;

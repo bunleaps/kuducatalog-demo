@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "../../../../components/ui/button";
+import { loadActiveCart, notifyCartUpdated } from "../../../../lib/cart-client";
 import { createClient } from "../../../../lib/supabase/client";
 
 export default function RemoveSetItemButton({ setItemId, itemTitle }: { setItemId: string; itemTitle: string }) {
@@ -16,7 +17,7 @@ export default function RemoveSetItemButton({ setItemId, itemTitle }: { setItemI
     if (!supabase) return;
     setRemoving(true);
     const { error } = await supabase.from("project_set_items").delete().eq("id", setItemId);
-    if (!error) router.refresh();
+    if (!error) { const cart = await loadActiveCart(supabase); notifyCartUpdated(cart.itemCount); router.refresh(); }
     setRemoving(false);
   }
 

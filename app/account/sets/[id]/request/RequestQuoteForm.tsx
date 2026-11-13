@@ -7,10 +7,11 @@ import { Button } from "../../../../../components/ui/button";
 import { Input } from "../../../../../components/ui/input";
 import { Select } from "../../../../../components/ui/select";
 import { Textarea } from "../../../../../components/ui/textarea";
+import { notifyCartUpdated } from "../../../../../lib/cart-client";
 import { createClient } from "../../../../../lib/supabase/client";
 
 type Item = { id: string; title: string; category: string; availability: string; quantity: number };
-type Draft = { id: string; title: string; collection_date: string; return_date: string; collection_time: string; return_time: string; fulfillment: string; contact_name: string; shoot_location: string; production_type: string; request_notes: string };
+type Draft = { id: string; title: string; is_active: boolean; collection_date: string; return_date: string; collection_time: string; return_time: string; fulfillment: string; contact_name: string; shoot_location: string; production_type: string; request_notes: string };
 
 function formatDate(value: string) { if (!value) return "Not selected"; const [y, m, d] = value.split("-").map(Number); return new Intl.DateTimeFormat("en", { day: "numeric", month: "long", year: "numeric" }).format(new Date(y, m - 1, d)); }
 function formatTime(value: string) { if (!value) return ""; const [h, m] = value.split(":").map(Number); return new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date(2000, 0, 1, h, m)); }
@@ -49,9 +50,10 @@ export default function RequestQuoteForm({ projectSet, email, items }: { project
     event.preventDefault(); if (!canContinue) return;
     const supabase = createClient(); if (!supabase) return;
     setSaving(true); setError("");
-    const { error: updateError } = await supabase.from("project_sets").update({ title: form.title.trim(), collection_date: form.collection_date, return_date: form.return_date, collection_time: form.collection_time || null, return_time: form.return_time || null, fulfillment: form.fulfillment, contact_name: form.contact_name.trim(), shoot_location: form.shoot_location.trim(), production_type: form.production_type, request_notes: form.request_notes.trim() || null }).eq("id", form.id);
+    const { error: updateError } = await supabase.from("project_sets").update({ title: form.title.trim(), is_active: false, collection_date: form.collection_date, return_date: form.return_date, collection_time: form.collection_time || null, return_time: form.return_time || null, fulfillment: form.fulfillment, contact_name: form.contact_name.trim(), shoot_location: form.shoot_location.trim(), production_type: form.production_type, request_notes: form.request_notes.trim() || null }).eq("id", form.id);
     setSaving(false);
     if (updateError) { setError(updateError.message.includes("column") ? "Run the quote request fields migration in Supabase, then try again." : updateError.message); return; }
+    notifyCartUpdated(0);
     setStep("message");
   }
 

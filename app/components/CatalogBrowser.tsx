@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { BookmarkPlus, Check, FolderHeart, Heart, Info, Plus, RotateCcw, Search, ShoppingCart, SlidersHorizontal, X } from "lucide-react";
+import { Check, Heart, Info, RotateCcw, Search, ShoppingCart, SlidersHorizontal } from "lucide-react";
 import type { CatalogItem } from "../../lib/catalog";
+import { addItemToCart, getGuestCartIds, loadActiveCart } from "../../lib/cart-client";
 import { Button } from "../../components/ui/button";
 import { Select } from "../../components/ui/select";
 import { createClient } from "../../lib/supabase/client";
 
-type ProjectSet = { id: string; title: string };
 const normalizeText = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g, " ").toLowerCase();
 
 export default function CatalogBrowser({ items, userId, showSetTools = true, initialQuery = "", initialCategory = "all" }: { items: CatalogItem[]; userId?: string; showSetTools?: boolean; initialQuery?: string; initialCategory?: string }) {
@@ -20,10 +20,8 @@ export default function CatalogBrowser({ items, userId, showSetTools = true, ini
   const [availableOnly, setAvailableOnly] = useState(false);
   const [sort, setSort] = useState("featured");
   const [visibleCount, setVisibleCount] = useState(12);
-  const [sets, setSets] = useState<ProjectSet[]>([]);
-  const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
-  const [savedSetIdsByItem, setSavedSetIdsByItem] = useState<Record<string, Set<string>>>({});
+  const [cartItemIds, setCartItemIds] = useState<Set<string>>(new Set());
+  const [addingCartItem, setAddingCartItem] = useState<string | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [favoriteBusy, setFavoriteBusy] = useState<string | null>(null);
 
@@ -34,21 +32,18 @@ export default function CatalogBrowser({ items, userId, showSetTools = true, ini
   }, [availableOnly, category, items, query, sort]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      queueMicrotask(() => setCartItemIds(new Set(getGuestCartIds())));
+      return;
+    }
     const supabase = createClient(); if (!supabase) return;
     Promise.all([
-      supabase.from("project_sets").select("id,title").order("created_at", { ascending: false }),
+      loadActiveCart(supabase),
       supabase.from("favorites").select("catalog_item_id"),
-    ]).then(async ([setsResult, favoritesResult]) => {
-      const projectSets = (setsResult.data ?? []) as ProjectSet[];
-      setSets(projectSets);
+    ]).then(([cart, favoritesResult]) => {
+      setCartItemIds(cart.itemIds);
       setFavoriteIds(new Set((favoritesResult.data ?? []).map((row) => row.catalog_item_id)));
-      if (!projectSets.length) return;
-      const { data: savedItems } = await supabase.from("project_set_items").select("project_set_id,catalog_item_id").in("project_set_id", projectSets.map((set) => set.id));
-      const savedSets: Record<string, Set<string>> = {};
-      for (const row of savedItems ?? []) { if (!savedSets[row.catalog_item_id]) savedSets[row.catalog_item_id] = new Set(); savedSets[row.catalog_item_id].add(row.project_set_id); }
-      setSavedSetIdsByItem(savedSets);
-    });
+    }).catch(() => undefined);
   }, [userId]);
 
   async function toggleFavorite(itemId: string) {
@@ -66,12 +61,17 @@ export default function CatalogBrowser({ items, userId, showSetTools = true, ini
     setFavoriteBusy(null);
   }
 
-  async function saveToSet(projectSetId: string, catalogItemId: string) {
-    const supabase = createClient(); if (!supabase) return;
-    const key = `${projectSetId}:${catalogItemId}`; setSavingKey(key);
-    const { error } = await supabase.from("project_set_items").upsert({ project_set_id: projectSetId, catalog_item_id: catalogItemId, quantity: 1 }, { onConflict: "project_set_id,catalog_item_id" });
-    if (!error) setSavedSetIdsByItem((current) => ({ ...current, [catalogItemId]: new Set(current[catalogItemId] ?? []).add(projectSetId) }));
-    setSavingKey(null);
+  async function addCartItem(itemId: string) {
+    if (cartItemIds.has(itemId)) return;
+    setAddingCartItem(itemId);
+    try {
+      await addItemToCart(itemId, userId);
+      setCartItemIds((current) => new Set(current).add(itemId));
+    } catch {
+      return;
+    } finally {
+      setAddingCartItem(null);
+    }
   }
 
   const clear = () => { setQuery(""); setCategory("all"); setAvailableOnly(false); };
@@ -89,8 +89,6 @@ export default function CatalogBrowser({ items, userId, showSetTools = true, ini
     <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4 dark:border-[#343438]"><div className="flex flex-wrap items-center gap-4"><span className="flex items-center gap-2 text-xs font-bold uppercase"><SlidersHorizontal size={14} />Filters</span><label className="flex cursor-pointer items-center gap-2 text-sm"><input type="checkbox" checked={availableOnly} onChange={(event) => setAvailableOnly(event.target.checked)} className="accent-[#f54449]" />Available now</label>{(query || category !== "all" || availableOnly) && <button onClick={clear} className="flex items-center gap-2 text-xs font-bold uppercase text-[#f54449]"><RotateCcw size={13} />Clear</button>}</div><div className="flex items-center gap-2 text-sm text-slate-500 dark:text-[#9b9ba2]"><span>Sort:</span><Select ariaLabel="Sort equipment" value={sort} onValueChange={setSort} options={[{ value: "featured", label: "Featured" }, { value: "name", label: "Name" }]} className="w-36" triggerClassName="h-9 border-slate-200 bg-white px-3 font-medium dark:border-[#343438] dark:bg-[#1a1a1d]" menuClassName="right-0 left-auto min-w-36" /></div></div>
 
     <div className="mt-6 text-sm text-slate-500 dark:text-[#9b9ba2]">{filteredItems.length} {filteredItems.length === 1 ? "item" : "items"}</div>
-    {filteredItems.length ? <><section className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{filteredItems.slice(0, visibleCount).map((item) => { const image = item.featured_media || item.media?.[0]; const isFavorite = favoriteIds.has(item.id); return <article key={item.id} className="group flex min-h-full flex-col border border-slate-200 bg-white p-3 transition hover:border-[#f54449] dark:border-[#343438] dark:bg-[#1a1a1d]"><div className="relative"><Link href={`/catalog/${item.id}`} className="block aspect-[4/3] overflow-hidden bg-[#f5f5f5]">{image ? <img src={image} alt={item.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]" /> : <span className="grid h-full place-items-center text-sm text-slate-400">No image</span>}</Link><div className="absolute inset-0 z-10 flex items-center justify-center gap-3 bg-black/55 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"><Link href={`/catalog/${item.id}`} aria-label={`View details for ${item.title}`} title="View details" className="grid size-11 place-items-center border border-white/50 bg-[#171719]/90 text-white transition hover:border-[#f54449] hover:bg-[#f54449]"><Info size={19} /></Link>{showSetTools && item.availability !== "unavailable" && <button onClick={() => setSelectedItem(item)} aria-label={`Add ${item.title} to a quote list`} title="Add to quote list" className="grid size-11 place-items-center border border-white/50 bg-[#171719]/90 text-white transition hover:border-[#f54449] hover:bg-[#f54449]"><ShoppingCart size={19} /></button>}</div><button onClick={() => toggleFavorite(item.id)} disabled={favoriteBusy === item.id} className={`absolute right-2 top-2 z-20 grid size-9 place-items-center border bg-white shadow-sm transition hover:text-[#f54449] dark:border-[#343438] dark:bg-[#151517] ${isFavorite ? "border-[#f54449] text-[#f54449]" : "border-slate-200 text-slate-600 dark:text-[#c0c0c6]"}`} aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}><Heart size={16} fill={isFavorite ? "currentColor" : "none"} /></button></div><p className="mt-4 text-[11px] font-bold uppercase text-[#f54449]">{item.category}</p><Link href={`/catalog/${item.id}`} className="mt-1 line-clamp-2 text-base font-bold hover:text-[#f54449]">{item.title}</Link><div className="mt-auto flex items-end justify-between gap-3 pt-4"><span className={`border px-2.5 py-1 text-[11px] font-bold uppercase ${item.availability === "available" ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" : item.availability === "limited" ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" : "border-red-300 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300"}`}>{availabilityLabel(item.availability)}</span></div></article>; })}</section>{visibleCount < filteredItems.length && <div className="mt-8 text-center"><Button variant="outline" size="lg" onClick={() => setVisibleCount((count) => count + 12)}>Load more equipment</Button></div>}</> : <div className="mt-5 border border-dashed border-slate-300 px-6 py-16 text-center dark:border-[#3a3a3e]"><h2 className="font-bold">No equipment matches these filters.</h2><p className="mt-2 text-sm text-slate-500 dark:text-[#96969d]">Try another search or clear the current filters.</p></div>}
-
-    {selectedItem && <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="save-item-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedItem(null); }}><div className="w-full max-w-md border border-slate-200 bg-white p-5 text-slate-950 shadow-2xl dark:border-[#414146] dark:bg-[#1a1a1d] dark:text-white"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase text-[#f54449]">Add to quote list</p><h2 id="save-item-title" className="mt-1 text-lg font-bold">{selectedItem.title}</h2></div><Button variant="ghost" size="sm" className="size-9 px-0" onClick={() => setSelectedItem(null)} aria-label="Close"><X size={17} /></Button></div><div className="mt-5">{!userId ? <div className="border border-dashed border-slate-300 p-6 text-center dark:border-[#414146]"><p className="text-sm text-slate-500 dark:text-[#aaaab1]">Sign in to add equipment to a saved quote list.</p><Button asChild className="mt-4"><Link href="/login"><BookmarkPlus size={15} />Sign in</Link></Button></div> : !sets.length ? <div className="border border-dashed border-slate-300 p-6 text-center dark:border-[#414146]"><FolderHeart className="mx-auto text-[#77777f]" size={22} /><p className="mt-3 text-sm text-slate-500 dark:text-[#aaaab1]">Create a quote list before adding equipment.</p><Button asChild className="mt-4"><Link href="/account">Create a quote</Link></Button></div> : <div className="grid gap-2">{sets.map((set) => { const isSaved = savedSetIdsByItem[selectedItem.id]?.has(set.id) ?? false; const key = `${set.id}:${selectedItem.id}`; return <div key={set.id} className="flex items-center justify-between gap-3 border border-slate-200 px-4 py-3 dark:border-[#3a3a3e]"><span className="truncate text-sm font-medium">{set.title}</span>{isSaved ? <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400"><Check size={14} />Added</span> : <Button size="sm" variant="outline" disabled={savingKey === key} onClick={() => saveToSet(set.id, selectedItem.id)}><Plus size={14} />{savingKey === key ? "Adding…" : "Add"}</Button>}</div>; })}</div>}</div></div></div>}
+    {filteredItems.length ? <><section className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{filteredItems.slice(0, visibleCount).map((item) => { const image = item.featured_media || item.media?.[0]; const isFavorite = favoriteIds.has(item.id); const isInCart = cartItemIds.has(item.id); return <article key={item.id} className="group flex min-h-full flex-col border border-slate-200 bg-white p-3 transition hover:border-[#f54449] dark:border-[#343438] dark:bg-[#1a1a1d]"><div className="relative"><Link href={`/catalog/${item.id}`} className="block aspect-[4/3] overflow-hidden bg-[#f5f5f5]">{image ? <img src={image} alt={item.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]" /> : <span className="grid h-full place-items-center text-sm text-slate-400">No image</span>}</Link>{isInCart && <span className="absolute left-2 top-2 z-20 flex items-center gap-1 bg-emerald-600 px-2 py-1 text-[10px] font-bold uppercase text-white"><Check size={12} />In cart</span>}<div className="absolute inset-0 z-10 flex items-center justify-center gap-3 bg-black/55 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"><Link href={`/catalog/${item.id}`} aria-label={`View details for ${item.title}`} title="View details" className="grid size-11 place-items-center border border-white/50 bg-[#171719]/90 text-white transition hover:border-[#f54449] hover:bg-[#f54449]"><Info size={19} /></Link>{showSetTools && item.availability !== "unavailable" && <button onClick={() => addCartItem(item.id)} disabled={isInCart || addingCartItem === item.id} aria-label={isInCart ? `${item.title} is in your cart` : `Add ${item.title} to cart`} title={isInCart ? "Already in cart" : "Add to cart"} className={`grid size-11 place-items-center border text-white transition ${isInCart ? "border-emerald-500 bg-emerald-600" : "border-white/50 bg-[#171719]/90 hover:border-[#f54449] hover:bg-[#f54449]"}`}>{isInCart ? <Check size={19} /> : <ShoppingCart size={19} />}</button>}</div><button onClick={() => toggleFavorite(item.id)} disabled={favoriteBusy === item.id} className={`absolute right-2 top-2 z-20 grid size-9 place-items-center border bg-white shadow-sm transition hover:text-[#f54449] dark:border-[#343438] dark:bg-[#151517] ${isFavorite ? "border-[#f54449] text-[#f54449]" : "border-slate-200 text-slate-600 dark:text-[#c0c0c6]"}`} aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}><Heart size={16} fill={isFavorite ? "currentColor" : "none"} /></button></div><p className="mt-4 text-[11px] font-bold uppercase text-[#f54449]">{item.category}</p><Link href={`/catalog/${item.id}`} className="mt-1 line-clamp-2 text-base font-bold hover:text-[#f54449]">{item.title}</Link><div className="mt-auto flex items-end justify-between gap-3 pt-4"><span className={`border px-2.5 py-1 text-[11px] font-bold uppercase ${item.availability === "available" ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" : item.availability === "limited" ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" : "border-red-300 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300"}`}>{availabilityLabel(item.availability)}</span></div></article>; })}</section>{visibleCount < filteredItems.length && <div className="mt-8 text-center"><Button variant="outline" size="lg" onClick={() => setVisibleCount((count) => count + 12)}>Load more equipment</Button></div>}</> : <div className="mt-5 border border-dashed border-slate-300 px-6 py-16 text-center dark:border-[#3a3a3e]"><h2 className="font-bold">No equipment matches these filters.</h2><p className="mt-2 text-sm text-slate-500 dark:text-[#96969d]">Try another search or clear the current filters.</p></div>}
   </>;
 }
