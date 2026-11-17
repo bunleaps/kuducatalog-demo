@@ -16,6 +16,8 @@ const availabilityLabels: Record<CatalogItem["availability"], string> = {
   unavailable: "Unavailable",
 };
 
+const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
 export default function HomeEquipmentCard({ item, allowQuote = true, inCart = false, adding = false, onAdd }: { item: CatalogItem; allowQuote?: boolean; inCart?: boolean; adding?: boolean; onAdd?: () => void }) {
   const image = item.featured_media || item.media?.[0];
 
@@ -30,6 +32,6 @@ export default function HomeEquipmentCard({ item, allowQuote = true, inCart = fa
     </div>
     <p className="mt-4 text-[11px] font-bold uppercase text-[#f54449]">{item.category}</p>
     <Link href={`/catalog/${item.id}`} className="mt-1 block line-clamp-2 font-bold hover:text-[#f54449]">{item.title}</Link>
-    <div className="mt-auto pt-3"><span className={`inline-flex w-fit border px-2.5 py-1 text-[11px] font-bold uppercase ${availabilityClasses[item.availability]}`}>{availabilityLabels[item.availability]}</span></div>
+    <div className="mt-auto flex items-center justify-between gap-3 pt-3"><span className={`inline-flex w-fit border px-2.5 py-1 text-[11px] font-bold uppercase ${availabilityClasses[item.availability]}`}>{availabilityLabels[item.availability]}</span><span className="shrink-0 text-right text-sm font-black text-slate-950 dark:text-white">{item.daily_rate === null ? "Contact" : <>{usd.format(item.daily_rate)}<span className="ml-1 text-[10px] font-medium uppercase text-slate-500 dark:text-[#929299]">/ day</span></>}</span></div>
   </article>;
 }

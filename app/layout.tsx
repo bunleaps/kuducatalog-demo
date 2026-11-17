@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Noto_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const notoSans = Noto_Sans({
+const notoSans = localFont({
+  src: "./fonts/noto-sans-latin.woff2",
   variable: "--font-noto-sans",
-  subsets: ["latin"],
   display: "swap",
+  weight: "100 900",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/geist-mono.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
+  weight: "100 900",
 });
 
 export const metadata: Metadata = {

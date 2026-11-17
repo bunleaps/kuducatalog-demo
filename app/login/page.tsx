@@ -17,8 +17,10 @@ export default function CustomerLoginPage() {
   const [loading, setLoading] = useState(false);
   const [nextPath, setNextPath] = useState("/account");
   useEffect(() => {
-    const requested = new URLSearchParams(window.location.search).get("next");
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get("next");
     if (requested?.startsWith("/") && !requested.startsWith("//")) queueMicrotask(() => setNextPath(requested));
+    if (params.get("confirmation") === "failed") queueMicrotask(() => setError("We could not confirm that email link. Request a new confirmation email or try signing in again."));
   }, []);
   async function login(event: FormEvent) {
     event.preventDefault(); setLoading(true); setError("");
